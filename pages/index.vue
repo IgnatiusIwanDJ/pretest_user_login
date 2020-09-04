@@ -1,93 +1,78 @@
 <template>
-  <v-layout column justify-center align-center>
-    <v-flex xs12 sm8 md6>
-      <div class="text-center">
-        <logo />
-        <vuetify-logo />
-      </div>
-      <v-card>
-        <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
+  <v-layout
+    align-center
+    justify-space-around
+    row
+    wrap
+    fill-height
+    class="login-page"
+  >
+    <v-flex pt-2 ml-2 mr-2 shrink>
+      <v-card class="card-login-template">
+        <v-card-title primary-title>
+          <v-layout mt-2 ml-1 mr-1 row>
+            <v-flex xs12 pl-2 pr-2>
+              <v-text-field label="no hp" outlined></v-text-field>
+            </v-flex>
+            <v-flex xs12 pl-2 pr-2>
+              <v-text-field label="password" outlined></v-text-field>
+            </v-flex>
+            <v-flex xs12 pl-2 pr-2>
+              <v-text-field label="country" outlined></v-text-field>
+            </v-flex>
+          </v-layout>
         </v-card-title>
-        <v-card-text>
-          <p>
-            Vuetify is a progressive Material Design component framework for
-            Vue.js. It was designed to empower developers to create amazing
-            applications.
-          </p>
-          <p>
-            For more information on Vuetify, check out the
-            <a
-              href="https://vuetifyjs.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              documentation </a
-            >.
-          </p>
-          <p>
-            If you have questions, please join the official
-            <a
-              href="https://chat.vuetifyjs.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="chat"
-            >
-              discord </a
-            >.
-          </p>
-          <p>
-            Find a bug? Report it on the github
-            <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="contribute"
-            >
-              issue board </a
-            >.
-          </p>
-          <p>
-            Thank you for developing with Vuetify and I look forward to bringing
-            more exciting features in the future.
-          </p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
-          </div>
-          <hr class="my-3" />
-          <a
-            href="https://nuxtjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt Documentation
-          </a>
-          <br />
-          <a
-            href="https://github.com/nuxt/nuxt.js"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt GitHub
-          </a>
-        </v-card-text>
         <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" nuxt to="/inspire"> Continue </v-btn>
+          <v-layout align-start justify-center column>
+            <v-flex xs12 pb-2 align-self-center>
+              <v-btn class="login-button" color="orange">Register</v-btn>
+            </v-flex>
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+    </v-flex>
+    <v-flex pt-2 ml-2 mr-2 shrink>
+      <v-card ml-2 mr-2 class="card-login-template">
+        <v-card-title primary-title>
+          <v-layout mt-2 ml-1 mr-1 row>
+            <v-flex xs12 pl-2 pr-2>
+              <v-text-field label="no hp" outlined></v-text-field>
+            </v-flex>
+            <v-flex xs12 pl-2 pr-2>
+              <v-text-field label="password" outlined></v-text-field>
+            </v-flex>
+          </v-layout>
+        </v-card-title>
+        <v-card-actions>
+          <v-layout align-start justify-center column>
+            <v-flex xs12 pb-2 align-self-center>
+              <v-btn class="login-button" color="orange">Login</v-btn>
+            </v-flex>
+          </v-layout>
         </v-card-actions>
       </v-card>
     </v-flex>
   </v-layout>
 </template>
 
-<script>
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
-
-export default {
-  components: {
-    Logo,
-    VuetifyLogo,
-  },
+<style lang="scss" scoped>
+.login-page {
+  font-weight: 500;
+  font-family: Roboto, sans-serif !important;
+  .card-login-template {
+    height: 80vh;
+  }
+  .login-button {
+    height: 44px;
+    min-width: 200px;
+    padding: 0 19.5555555556px;
+  }
 }
-</script>
+
+@media only screen and (min-width: 1280px) {
+  .card-login-template {
+    height: 80vh;
+    max-width: 400px;
+  }
+}
+</style>
