@@ -57,12 +57,22 @@ export default {
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
+    '@nuxtjs/proxy',
   ],
   /*
    ** Axios module configuration
    ** See https://axios.nuxtjs.org/options
    */
-  axios: {},
+  axios: {
+    proxy: true,
+  },
+
+  proxy: [
+    'http://pretest-qa.dcidev.id/api/v1/register',
+    'http://pretest-qa.dcidev.id/api/v1/oauth/sign_in',
+    'http://pretest-qa.dcidev.id/api/v1/register/otp/request',
+    'http://pretest-qa.dcidev.id/api/v1/register/otp/match',
+  ],
   /*
    ** vuetify module configuration
    ** https://github.com/nuxt-community/vuetify-module
@@ -70,7 +80,6 @@ export default {
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
     theme: {
-      dark: false,
       themes: {
         dark: {
           primary: colors.blue.darken2,

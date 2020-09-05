@@ -95,6 +95,15 @@
                 :disabled="!loginValid"
                 class="login-button"
                 color="orange"
+                @click="
+                  postLogin({
+                    telephone: signIn.telephone,
+                    password: signIn.password,
+                    latLong: register.latLong,
+                    deviceToken: register.deviceToken,
+                    deviceType: 2,
+                  })
+                "
               >
                 Login
               </v-btn>
@@ -108,10 +117,12 @@
 
 <script>
 import Swal from 'sweetalert2'
+import SharedFunctionMixin from '@/mixin/sharedFunctionMixin'
 
 const axios = require('axios')
 
 export default {
+  mixins: [SharedFunctionMixin],
   data() {
     return {
       registerValid: true,
@@ -120,6 +131,9 @@ export default {
         telephone: [
           (v) => !!v || 'isi nomor telephone',
           (v) => !this.checkIfEmpty(v) || 'isi nomor telephone',
+          (v) =>
+            this.checkIfPhoneNumber(v) ||
+            'nomor telephone harus angka dan berdigit 10',
         ],
         password: [
           (v) => !!v || 'isi password',
@@ -134,8 +148,8 @@ export default {
         telephone: '',
         password: '',
         country: '',
-        latlong: '',
-        deviceToken: '',
+        latLong: '',
+        deviceToken: localStorage.getItem('device_token'),
         deviceType: 2,
       },
       signIn: {
@@ -144,46 +158,87 @@ export default {
       },
     }
   },
+  created() {
+    if (localStorage.getItem('device_token') == null) {
+      this.register.deviceToken = btoa(
+        Math.random() + navigator.userAgent + Date(),
+      )
+      this.$store.commit('saveDeviceToken', this.register.deviceToken)
+    }
+    this.getLocation()
+  },
   methods: {
-    checkIfEmpty(myString) {
-      return /^\s*$/.test(myString)
+    getLocation() {
+      if (window.navigator && window.navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (item) => {
+            this.register.latLong = `${item.coords.latitude},${item.coords.longitude}`
+            this.$store.commit('saveCurrentLocation', this.register.latLong)
+          },
+          () => {},
+        )
+      }
+    },
+    postLogin(userData) {
+      if (this.$refs.loginForm.validate()) {
+        axios
+          .post(
+            '/api/v1/oauth/sign_in',
+            `phone=${userData.telephone}&password=${userData.password}&latlong=${userData.latlong}&device_token=${userData.deviceToken}&device_type=${userData.deviceType}`,
+          )
+          .then((response) => {
+            console.log(response)
+            this.$store.commit(
+              'saveToken',
+              response.data.data.user.access_token,
+            )
+            axios.defaults.headers.common.Authorization = `Bearer ${response.data.data.user.access_token}`
+            this.$router.push(`/user/${userData.telephone}`)
+          })
+          .catch((error) => {
+            console.log(error)
+            Swal.fire({
+              title: 'Terjadi Kesalahan',
+              text: error,
+              icon: 'error',
+              timer: 2000,
+              confirmButtonText: 'Tutup',
+            })
+          })
+      }
     },
     postRegister() {
-      const axiosConfig = {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          crossOrigin: true,
-        },
-      }
-      axios
-        .post(
-          'http://pretest-qa.dcidev.id/api/v1/register',
-          `phone=${this.register.telephone}&password=${this.register.password}&country=${this.register.country}&latlong=${this.register.latlong}&device_token=${this.register.deviceToken}&device_type=${this.register.deviceType}`,
-          axiosConfig,
-        )
-        .then((response) => {
-          console.log(response)
-          if (response.status === 201) {
-            const tempData = {
-              otp: '1',
-              telephone: this.register.telephone,
-              userId: '111222',
-              userStatus: 'pending',
+      if (this.$refs.registerForm.validate()) {
+        this.getLocation()
+        axios
+          .post(
+            '/api/v1/register',
+            `phone=${this.register.telephone}&password=${this.register.password}&country=${this.register.country}&latlong=${this.register.latLong}&device_token=${this.register.deviceToken}&device_type=${this.register.deviceType}`,
+          )
+          .then((response) => {
+            console.log(response)
+            if (response.status === 201) {
+              const tempData = {
+                telephone: this.register.telephone,
+                sugarId: response.data.data.user.sugar_id,
+                userId: response.data.data.user.id,
+                userStatus: response.data.data.user.user_status,
+              }
+              this.$store.commit('keepTempData', tempData)
+              this.$router.push('/verification')
             }
-            this.$store.commit('keepTempData', tempData)
-            this.$router.push('/verification')
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-          Swal.fire({
-            title: 'Terjadi Kesalahan',
-            text: error,
-            icon: 'error',
-            timer: 2000,
-            confirmButtonText: 'Tutup',
           })
-        })
+          .catch((error) => {
+            console.log(error)
+            Swal.fire({
+              title: 'Terjadi Kesalahan',
+              text: error,
+              icon: 'error',
+              timer: 2000,
+              confirmButtonText: 'Tutup',
+            })
+          })
+      }
     },
   },
 }
@@ -192,16 +247,7 @@ export default {
 <style lang="scss" scoped>
 @import '@/assets/variables.scss';
 
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.5s;
-}
-.page-enter,
-.page-leave-to {
-  opacity: 0;
-}
 .login-page {
-  font-weight: 500;
   font-family: Roboto, sans-serif !important;
   .card-login-template {
     min-height: 400px;

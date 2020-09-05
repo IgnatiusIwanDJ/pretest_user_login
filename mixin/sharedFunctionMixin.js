@@ -1,5 +1,3 @@
-const axios = require('axios')
-
 export default {
   methods: {
     checkIfPhoneNumber(myString) {
@@ -13,27 +11,6 @@ export default {
     },
     checkIfEmpty(myString) {
       return /^\s*$/.test(myString)
-    },
-    postLogin(userData) {
-      axios
-        .post(
-          'http://pretest-qa.dcidev.id/api/v1/oauth/sign_in',
-          `phone=${userData.telephone}&password=${userData.password}&country=${userData.country}&latlong=${userData.latlong}&device_token=${userData.deviceToken}&device_type=${userData.deviceType}`,
-        )
-        .then((response) => {
-          if (response.status === 201) {
-            const tempData = {
-              telephone: userData.telephone,
-              userId: '111222',
-              userStatus: 'pending',
-            }
-            this.$store.commit('keepTempData', tempData)
-            this.$router.push('/verification')
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-        })
     },
   },
 }
