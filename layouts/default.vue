@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <!-- <a href='https://www.freepik.com/vectors/background'>Background vector created by freepik - www.freepik.com</a> -->
     <v-main class="layout-styling">
       <v-container fill-height>
         <nuxt />
