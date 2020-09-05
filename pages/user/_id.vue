@@ -244,11 +244,17 @@
 </template>
 
 <script>
+import SharedFunctionMixin from '@/mixin/sharedFunctionMixin'
+
 export default {
-  // middleware: 'verifyUser',
+  middleware: 'verifyUser',
+  mixins: [SharedFunctionMixin],
+  /*
   validate({ params }) {
-    return /^\d+$/.test(params.id)
+    console.log(this.checkIfPhoneNumber(params.id))
+    return this.checkIfPhoneNumber(params.id)
   },
+  */
   data() {
     return {
       resource: {
