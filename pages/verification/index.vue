@@ -42,7 +42,6 @@
               <v-btn
                 text
                 small
-                :loading="loading"
                 :disabled="loading"
                 class="login-button"
                 color="grey"
@@ -64,6 +63,7 @@ import Swal from 'sweetalert2'
 const axios = require('axios')
 
 export default {
+  middleware: 'registrationCheck',
   data() {
     return {
       loading: false,

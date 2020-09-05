@@ -1,10 +1,5 @@
 export const state = () => ({
-  toVerify: {
-    otp: '',
-    telephone: '',
-    userId: '',
-    userStatus: '',
-  },
+  toVerify: null,
 })
 
 export const mutations = {
@@ -12,11 +7,6 @@ export const mutations = {
     state.toVerify = payload
   },
   removeTempData(state) {
-    state.toVerify = {
-      otp: '',
-      telephone: '',
-      userId: '',
-      userStatus: '',
-    }
+    state.toVerify = null
   },
 }
