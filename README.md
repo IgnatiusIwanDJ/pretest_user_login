@@ -1,5 +1,17 @@
 # pretest_user_login
 
+Implementation of simple login and user activity powered with Nuxt.js. To run this follow the steps below
+
+## Testing setup
+
+```bash
+# install dependencies
+$ npm install
+
+# serve with hot reload at localhost:3000
+$ npm run dev
+```
+
 ## Build Setup
 
 ```bash
