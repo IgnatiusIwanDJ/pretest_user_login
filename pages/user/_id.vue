@@ -30,6 +30,15 @@
     <v-flex xs12 class="information-layout">
       <v-layout pt-4 align-center justify-start column>
         <v-flex pt-3 pb-4>
+          <v-flex xs12 pt-3 pb-5>
+            <v-layout align-center justify-center row wrap>
+              <v-flex xs4>
+                <v-btn small block color="error" @click="logUserOut()">
+                  Logout
+                </v-btn>
+              </v-flex>
+            </v-layout>
+          </v-flex>
           <v-layout row class="ma-0 pa-0 info-tag">
             <v-flex grow>
               <h2>Profile</h2>
@@ -451,6 +460,21 @@ export default {
     this.getData()
   },
   methods: {
+    logUserOut() {
+      axios
+        .post('/api/v1/oauth/revoke', {
+          access_token: this.$store.state.authToken,
+          confirm: 1,
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+        .finally(() => {
+          this.$store.commit('removeToken')
+          this.$store.commit('removeLoggedIn')
+          this.$router.push(`/`)
+        })
+    },
     toggleEditCareer() {
       this.careerEditState = !this.careerEditState
       if (this.careerEditState) {
