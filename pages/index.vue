@@ -38,6 +38,7 @@
                   :rules="rules.country"
                   label="country"
                   outlined
+                  @keyup.enter="postRegister()"
                 >
                 </v-text-field>
               </v-flex>
@@ -82,6 +83,15 @@
                   label="password"
                   outlined
                   prepend-inner-icon="mdi-lock"
+                  @keyup.enter="
+                    postLogin({
+                      telephone: signIn.telephone,
+                      password: signIn.password,
+                      latLong: register.latLong,
+                      deviceToken: register.deviceToken,
+                      deviceType: 2,
+                    })
+                  "
                 >
                 </v-text-field>
               </v-flex>
