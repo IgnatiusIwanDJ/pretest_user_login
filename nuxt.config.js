@@ -77,6 +77,9 @@ export default {
     'http://pretest-qa.dcidev.id/api/v1/profile/education',
     'http://pretest-qa.dcidev.id/api/v1/profile/career',
     'http://pretest-qa.dcidev.id/api/v1/oauth/revoke',
+    'http://pretest-qa.dcidev.id/api/v1/uploads/cover',
+    'http://pretest-qa.dcidev.id/api/v1/uploads/profile',
+    'http://pretest-qa.dcidev.id/api/v1/message/send',
   ],
   /*
    ** vuetify module configuration

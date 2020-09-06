@@ -5,26 +5,35 @@
         <v-flex grow />
         <v-flex xs3 class="profile-image">
           <v-layout align-center justify-center column fill-height>
-            <v-flex xs12>
+            <v-flex v-if="!loading.profilePhoto" xs12>
               <v-icon x-large class="no-profile-image">mdi-account</v-icon>
             </v-flex>
-            <v-flex xs12>
+            <v-flex v-if="!loading.profilePhoto" xs12>
               <label>No pict yet</label>
             </v-flex>
+            <v-flex v-if="loading.profilePhoto" xs12 align-self-center>
+              <v-layout align-end justify-center row fill-height>
+                <v-progress-circular :size="70" indeterminate color="primary">
+                </v-progress-circular>
+              </v-layout>
+            </v-flex>
             <v-flex xs12>
-              <v-btn color="blue" small bottom right fab>
-                <v-icon medium color="white">mdi-account-plus</v-icon>
-              </v-btn>
+              <v-layout align-end justify-center row fill-height>
+                <v-btn
+                  color="blue"
+                  small
+                  bottom
+                  right
+                  fab
+                  @click="$refs.profileUpload.click()"
+                >
+                  <v-icon medium color="white">mdi-account-plus</v-icon>
+                </v-btn>
+              </v-layout>
             </v-flex>
           </v-layout>
         </v-flex>
-        <v-flex grow>
-          <v-layout ma-0 align-end justify-end row fill-height>
-            <v-btn color="blue" small bottom right fab>
-              <v-icon medium color="white">mdi-image</v-icon>
-            </v-btn>
-          </v-layout>
-        </v-flex>
+        <v-flex grow />
       </v-layout>
     </v-flex>
     <v-flex xs12 class="information-layout">
@@ -32,7 +41,38 @@
         <v-flex pt-3 pb-4>
           <v-flex xs12 pt-3 pb-5>
             <v-layout align-center justify-center row wrap>
-              <v-flex xs4>
+              <v-flex xs9>
+                <v-btn
+                  small
+                  block
+                  color="success"
+                  :disabled="loading.coverPhoto"
+                  :loading="loading.coverPhoto"
+                  @click="$refs.coverUpload.click()"
+                >
+                  Upload Cover Photo
+                </v-btn>
+                <input
+                  ref="coverUpload"
+                  type="file"
+                  style="display: none"
+                  accept="image/*"
+                  @change="coverFilePicked"
+                />
+                <input
+                  ref="profileUpload"
+                  type="file"
+                  style="display: none"
+                  accept="image/*"
+                  @change="profileFilePicked"
+                />
+              </v-flex>
+              <v-flex xs9 mt-3>
+                <v-btn small block color="primary" @click="dialog = true">
+                  Buka dialog chat
+                </v-btn>
+              </v-flex>
+              <v-flex xs4 mt-3>
                 <v-btn small block color="error" @click="logUserOut()">
                   Logout
                 </v-btn>
@@ -393,17 +433,28 @@
         </v-flex>
       </v-layout>
     </v-flex>
+    <v-dialog v-model="dialog" :max-width="600" attach>
+      <chat-dialog
+        :user-id="$store.state.userLoggedIn"
+        @close-dialog="dialog = false"
+      />
+    </v-dialog>
   </v-layout>
 </template>
 
 <script>
 import Swal from 'sweetalert2'
+import FormData from 'form-data'
 import SharedFunctionMixin from '@/mixin/sharedFunctionMixin'
 
+const chatDialog = () => import('../../components/chatDialog.vue')
 const axios = require('axios')
 
 export default {
   middleware: 'verifyUser',
+  components: {
+    chatDialog,
+  },
   mixins: [SharedFunctionMixin],
   /*
   validate({ params }) {
@@ -413,6 +464,7 @@ export default {
   */
   data() {
     return {
+      dialog: false,
       resource: {
         birthMenu: false,
         educationDateMenu: false,
@@ -423,6 +475,8 @@ export default {
         profile: false,
         education: false,
         career: false,
+        coverPhoto: false,
+        profilePhoto: false,
       },
       profileEditState: false,
       educationEditState: false,
@@ -457,9 +511,113 @@ export default {
   },
   created() {
     axios.defaults.headers.common.Authorization = `Bearer ${this.$store.state.authToken}`
+    if (this.$store.state.userLoggedIn == null) {
+      const route = this.$nuxt.$route.path.split('/')
+      axios
+        .post('/api/v1/register/otp/request', `phone=${route[3]}`)
+        .then((response) => {
+          this.$store.commit('setLoggedIn', response.data.data.user.id)
+        })
+        .catch((error) => {
+          Swal.fire({
+            title: 'Terjadi Kesalahan tidak bisa mendapat user ID',
+            text: error,
+            icon: 'error',
+            timer: 2000,
+            confirmButtonText: 'Tutup',
+          })
+          this.$store.commit('removeToken')
+          this.$store.commit('removeLoggedIn')
+          this.$router.push(`/`)
+        })
+    }
     this.getData()
   },
   methods: {
+    profileFilePicked(e) {
+      // eslint-disable-next-line
+      let data = new FormData()
+      const files = e.target.files
+      if (files[0] !== undefined) {
+        if (files[0].name.lastIndexOf('.') <= 0) {
+          return
+        }
+        this.loading.profilePhoto = true
+        data.append('image', files[0])
+        axios
+          .post(
+            '/api/v1/uploads/profile',
+            {
+              image: data,
+            },
+            {
+              headers: {
+                'Content-Type': `multipart/form-data`,
+              },
+            },
+          )
+          .then((response) => {
+            console.log(response)
+            this.input.pictures.profile =
+              response.data.data.user_picture.picture.url
+          })
+          .catch((error) => {
+            console.log(error)
+            Swal.fire({
+              title: 'Terjadi Kesalahan',
+              text: 'Upload gambar profile gagal',
+              icon: 'error',
+              timer: 2000,
+              confirmButtonText: 'Tutup',
+            })
+          })
+          .finally(() => {
+            this.loading.profilePhoto = false
+          })
+      }
+    },
+    coverFilePicked(e) {
+      // eslint-disable-next-line
+      let data = new FormData()
+      const files = e.target.files
+      if (files[0] !== undefined) {
+        if (files[0].name.lastIndexOf('.') <= 0) {
+          return
+        }
+        this.loading.coverPhoto = true
+        data.append('image', files[0])
+        axios
+          .post(
+            '/api/v1/uploads/cover',
+            {
+              image: data,
+            },
+            {
+              headers: {
+                'Content-Type': `multipart/form-data`,
+              },
+            },
+          )
+          .then((response) => {
+            console.log(response)
+            this.input.pictures.cover =
+              response.data.data.user_picture.cover_picture.url
+          })
+          .catch((error) => {
+            console.log(error)
+            Swal.fire({
+              title: 'Terjadi Kesalahan',
+              text: 'Upload Cover gambar gagal',
+              icon: 'error',
+              timer: 2000,
+              confirmButtonText: 'Tutup',
+            })
+          })
+          .finally(() => {
+            this.loading.coverPhoto = false
+          })
+      }
+    },
     logUserOut() {
       axios
         .post('/api/v1/oauth/revoke', {
