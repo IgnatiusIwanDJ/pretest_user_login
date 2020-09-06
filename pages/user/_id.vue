@@ -240,7 +240,7 @@
               </v-flex>
             </v-layout>
           </v-flex>
-          <v-layout row class="ma-0 pa-0 info-tag">
+          <v-layout row class="ma-0 pt-2 info-tag">
             <v-flex grow>
               <h2>Education</h2>
             </v-flex>
@@ -327,7 +327,7 @@
               </v-flex>
             </v-layout>
           </v-flex>
-          <v-layout row class="ma-0 pa-0 info-tag">
+          <v-layout row class="ma-0 pt-2 info-tag">
             <v-flex grow>
               <h2>Career</h2>
             </v-flex>
@@ -453,6 +453,47 @@
               </v-flex>
             </v-layout>
           </v-flex>
+          <v-layout row class="ma-0 pt-2 info-tag">
+            <v-flex grow>
+              <h2>Upload Images</h2>
+            </v-flex>
+            <v-flex shrink>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    icon
+                    fab
+                    color="grey"
+                    v-bind="attrs"
+                    @click="$refs.multipleUpload.click()"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-plus-box-multiple</v-icon>
+                  </v-btn>
+                </template>
+                <span>Masukkan gambar</span>
+              </v-tooltip>
+              <input
+                ref="multipleUpload"
+                type="file"
+                style="display: none"
+                accept="image/*"
+                multiple="multiple"
+                @change="multipleFilePicked"
+              />
+            </v-flex>
+          </v-layout>
+          <div class="input-grid gallery">
+            <template v-for="picture in input.pictures.collections">
+              <v-img
+                :key="picture.id"
+                class="gallery-pict"
+                :src="picture.picture.url"
+                max-height="100"
+                contain
+              />
+            </template>
+          </div>
         </v-flex>
       </v-layout>
     </v-flex>
@@ -502,12 +543,14 @@ export default {
         endDateMenuCareer: false,
       },
       uploadProgressProfile: 0,
+      multipleUpload: 0,
       loading: {
         profile: false,
         education: false,
         career: false,
         coverPhoto: false,
         profilePhoto: false,
+        multiplePhote: false,
       },
       profileEditState: false,
       educationEditState: false,
@@ -565,6 +608,44 @@ export default {
     this.getData()
   },
   methods: {
+    async multipleFilePicked(e) {
+      const data = new FormData()
+      const files = e.target.files
+      for (let i = 0; i < files.length; i++) {
+        console.log(files[i])
+        data.append('image', files[i])
+      }
+      this.loading.multiplePhote = true
+      await axios
+        .post('/api/v1/uploads/profile', data, {
+          onUploadProgress: (event) => {
+            this.multipleUpload = Math.round((event.loaded * 100) / event.total)
+          },
+          headers: {
+            'Content-Type': `multipart/form-data`,
+          },
+        })
+        .then((response) => {
+          console.log(response)
+          this.hintText = `Upload gambar sukses!`
+          this.popHint = true
+          this.getData()
+        })
+        .catch((error) => {
+          console.log(error)
+          Swal.fire({
+            title: 'Terjadi Kesalahan',
+            text: 'Upload gambar gagal',
+            icon: 'error',
+            timer: 2000,
+            confirmButtonText: 'Tutup',
+          })
+        })
+        .finally(() => {
+          this.loading.multiplePhote = false
+          this.multipleUpload = 0
+        })
+    },
     async profileFilePicked(e) {
       const data = new FormData()
       const files = e.target.files
@@ -827,7 +908,7 @@ export default {
             this.input.pictures = {
               profile: user.user_picture ? user.user_picture.picture.url : null,
               cover: user.cover_picture.url,
-              collections: [],
+              collections: user.user_pictures,
             }
           }
         })
@@ -889,6 +970,13 @@ export default {
     justify-items: baseline;
     align-items: center;
 
+    &.gallery {
+      padding-top: 24px;
+      grid-column-gap: 30px;
+      grid-template-columns: repeat(3, 100px);
+      grid-auto-rows: 80px;
+      padding-bottom: 24px;
+    }
     &.profile {
       grid-template-rows: repeat(3, 35px) 1fr;
     }
@@ -896,8 +984,15 @@ export default {
       grid-template-rows: repeat(2, 35px);
     }
     &.career {
-      grid-template-rows: repeat(2, 35px);
+      grid-template-rows: repeat(4, 35px);
     }
+  }
+  .gallery-pict {
+    transition: transform 0.2s;
+  }
+  .gallery-pict:hover {
+    border: 2px solid #dc8383;
+    transform: scale(1.2);
   }
   .label-grid {
   }

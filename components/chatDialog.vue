@@ -116,6 +116,7 @@ export default {
     },
   },
   created() {
+    this.getMessage()
     this.time = setInterval(this.getMessage, 4000)
   },
   beforeDestroy() {
