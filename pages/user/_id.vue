@@ -1,19 +1,42 @@
 <template>
   <v-layout ml-3 mr-3 wrap>
-    <v-flex xs12 class="cover-image">
+    <v-flex
+      xs12
+      class="cover-image"
+      :style="{ backgroundImage: 'url(' + input.pictures.cover + ')' }"
+    >
       <v-layout pa-0 ma-0 align-end justify-center row fill-height>
         <v-flex grow />
         <v-flex xs3 class="profile-image">
           <v-layout align-center justify-center column fill-height>
-            <v-flex v-if="!loading.profilePhoto" xs12>
+            <v-flex
+              v-if="!loading.profilePhoto && input.pictures.profile === null"
+              xs12
+            >
               <v-icon x-large class="no-profile-image">mdi-account</v-icon>
             </v-flex>
-            <v-flex v-if="!loading.profilePhoto" xs12>
+            <v-flex
+              v-if="!loading.profilePhoto && input.pictures.profile === null"
+              xs12
+            >
               <label>No pict yet</label>
             </v-flex>
+            <v-img
+              v-if="!loading.profilePhoto && input.pictures.profile !== null"
+              :src="input.pictures.profile"
+              max-height="200"
+              contain
+            />
             <v-flex v-if="loading.profilePhoto" xs12 align-self-center>
               <v-layout align-end justify-center row fill-height>
-                <v-progress-circular :size="70" indeterminate color="primary">
+                <v-progress-circular
+                  :size="70"
+                  :rotate="-90"
+                  :width="15"
+                  :value="uploadProgressProfile"
+                  color="primary"
+                >
+                  {{ uploadProgressProfile }}
                 </v-progress-circular>
               </v-layout>
             </v-flex>
@@ -433,6 +456,12 @@
         </v-flex>
       </v-layout>
     </v-flex>
+    <v-snackbar v-model="popHint" color="success" top :timeout="2000">
+      {{ hintText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn v-bind="attrs" @click="popHint = false">Close</v-btn>
+      </template>
+    </v-snackbar>
     <v-dialog v-model="dialog" :max-width="600" attach>
       <chat-dialog
         :user-id="$store.state.userLoggedIn"
@@ -444,7 +473,6 @@
 
 <script>
 import Swal from 'sweetalert2'
-import FormData from 'form-data'
 import SharedFunctionMixin from '@/mixin/sharedFunctionMixin'
 
 const chatDialog = () => import('../../components/chatDialog.vue')
@@ -465,12 +493,15 @@ export default {
   data() {
     return {
       dialog: false,
+      popHint: false,
+      hintText: '',
       resource: {
         birthMenu: false,
         educationDateMenu: false,
         startDateMenuCareer: false,
         endDateMenuCareer: false,
       },
+      uploadProgressProfile: 0,
       loading: {
         profile: false,
         education: false,
@@ -534,9 +565,8 @@ export default {
     this.getData()
   },
   methods: {
-    profileFilePicked(e) {
-      // eslint-disable-next-line
-      let data = new FormData()
+    async profileFilePicked(e) {
+      const data = new FormData()
       const files = e.target.files
       if (files[0] !== undefined) {
         if (files[0].name.lastIndexOf('.') <= 0) {
@@ -544,22 +574,23 @@ export default {
         }
         this.loading.profilePhoto = true
         data.append('image', files[0])
-        axios
-          .post(
-            '/api/v1/uploads/profile',
-            {
-              image: data,
+        await axios
+          .post('/api/v1/uploads/profile', data, {
+            onUploadProgress: (event) => {
+              this.uploadProgressProfile = Math.round(
+                (event.loaded * 100) / event.total,
+              )
             },
-            {
-              headers: {
-                'Content-Type': `multipart/form-data`,
-              },
+            headers: {
+              'Content-Type': `multipart/form-data`,
             },
-          )
+          })
           .then((response) => {
             console.log(response)
             this.input.pictures.profile =
               response.data.data.user_picture.picture.url
+            this.hintText = `Upload profil gambar sukses!`
+            this.popHint = true
           })
           .catch((error) => {
             console.log(error)
@@ -573,12 +604,12 @@ export default {
           })
           .finally(() => {
             this.loading.profilePhoto = false
+            this.uploadProgressProfile = 0
           })
       }
     },
-    coverFilePicked(e) {
-      // eslint-disable-next-line
-      let data = new FormData()
+    async coverFilePicked(e) {
+      const data = new FormData()
       const files = e.target.files
       if (files[0] !== undefined) {
         if (files[0].name.lastIndexOf('.') <= 0) {
@@ -586,22 +617,18 @@ export default {
         }
         this.loading.coverPhoto = true
         data.append('image', files[0])
-        axios
-          .post(
-            '/api/v1/uploads/cover',
-            {
-              image: data,
+        await axios
+          .post('/api/v1/uploads/cover', data, {
+            headers: {
+              'Content-Type': `multipart/form-data`,
             },
-            {
-              headers: {
-                'Content-Type': `multipart/form-data`,
-              },
-            },
-          )
+          })
           .then((response) => {
             console.log(response)
             this.input.pictures.cover =
               response.data.data.user_picture.cover_picture.url
+            this.hintText = `Upload cover gambar sukses!`
+            this.popHint = true
           })
           .catch((error) => {
             console.log(error)
@@ -798,7 +825,7 @@ export default {
               endDate: user.career.ending_in,
             }
             this.input.pictures = {
-              profile: user.user_picture,
+              profile: user.user_picture ? user.user_picture.picture.url : null,
               cover: user.cover_picture.url,
               collections: [],
             }
@@ -828,7 +855,9 @@ export default {
   min-height: 300px;
   border-radius: 15px 15px 0 0;
   background-clip: content-box;
+  background-position: center;
   background-color: darkgrey;
+  background-size: cover;
 }
 .profile-image {
   height: 80%;
