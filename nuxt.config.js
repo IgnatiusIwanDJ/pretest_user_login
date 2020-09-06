@@ -72,6 +72,10 @@ export default {
     'http://pretest-qa.dcidev.id/api/v1/oauth/sign_in',
     'http://pretest-qa.dcidev.id/api/v1/register/otp/request',
     'http://pretest-qa.dcidev.id/api/v1/register/otp/match',
+    'http://pretest-qa.dcidev.id/api/v1/profile/me',
+    'http://pretest-qa.dcidev.id/api/v1/profile',
+    'http://pretest-qa.dcidev.id/api/v1/profile/education',
+    'http://pretest-qa.dcidev.id/api/v1/profile/career',
   ],
   /*
    ** vuetify module configuration

@@ -30,19 +30,41 @@
     <v-flex xs12 class="information-layout">
       <v-layout pt-4 align-center justify-start column>
         <v-flex pt-3 pb-4>
-          <h2 class="info-tag">Profile</h2>
+          <v-layout row class="ma-0 pa-0 info-tag">
+            <v-flex grow>
+              <h2>Profile</h2>
+            </v-flex>
+            <v-flex shrink>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    icon
+                    :color="profileEditState ? 'blue' : 'grey'"
+                    v-bind="attrs"
+                    @click="toggleEditProfile()"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                </template>
+                <span>Edit Profile</span>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
           <div class="input-grid profile">
             <label class="label-grid">Nama</label>
             <v-flex class="line-input">
               <v-text-field
                 v-model="input.profile.name"
                 placeholder="Nama Lengkap"
+                :readonly="!profileEditState"
                 required
               />
             </v-flex>
             <label class="label-grid">Jenis Kelamin</label>
             <v-radio-group
               v-model="input.profile.gender"
+              :readonly="!profileEditState"
               row
               hide-details
               class="pa-0 ma-0"
@@ -62,10 +84,9 @@
                 v-model="resource.birthMenu"
                 :close-on-content-click="false"
                 :nudge-right="40"
-                lazy
+                :disabled="!profileEditState"
                 transition="scale-transition"
                 offset-y
-                full-width
                 min-width="290px"
               >
                 <template v-slot:activator="{ on }">
@@ -89,6 +110,7 @@
             <v-flex class="line-input">
               <v-textarea
                 v-model="input.profile.address"
+                :readonly="!profileEditState"
                 outlined
                 rows="1"
                 hide-details
@@ -99,7 +121,7 @@
               </v-textarea>
             </v-flex>
           </div>
-          <v-flex xs12 pt-3 pb-5>
+          <v-flex xs12 pt-3 pb-2>
             <v-layout ma-0 pa-0 row wrap>
               <v-flex xs12>
                 <h3 class="head-text-center">Biografi</h3>
@@ -107,6 +129,7 @@
               <v-flex xs12 pt-2>
                 <v-textarea
                   v-model="input.profile.bio"
+                  :readonly="!profileEditState"
                   outlined
                   rows="5"
                   hide-details
@@ -118,12 +141,60 @@
               </v-flex>
             </v-layout>
           </v-flex>
-          <h2 class="info-tag">Education</h2>
+          <v-flex v-if="profileEditState" xs12 pt-3 pb-5>
+            <v-layout align-center justify-space-around row wrap>
+              <v-flex xs4>
+                <v-btn
+                  small
+                  block
+                  color="primary"
+                  :disabled="loading.profile"
+                  :loading="loading.profile"
+                  @click="saveEditProfile()"
+                >
+                  Save
+                </v-btn>
+              </v-flex>
+              <v-flex xs4>
+                <v-btn
+                  small
+                  block
+                  color="error"
+                  :disabled="loading.profile"
+                  @click="cancelEditProfile()"
+                >
+                  Cancel
+                </v-btn>
+              </v-flex>
+            </v-layout>
+          </v-flex>
+          <v-layout row class="ma-0 pa-0 info-tag">
+            <v-flex grow>
+              <h2>Education</h2>
+            </v-flex>
+            <v-flex shrink>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    icon
+                    :color="educationEditState ? 'blue' : 'grey'"
+                    v-bind="attrs"
+                    @click="toggleEditEducation()"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                </template>
+                <span>Edit Jenjang Pendidikan</span>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
           <div class="input-grid education">
             <label class="label-grid">Nama Institusi</label>
             <v-flex class="line-input">
               <v-text-field
                 v-model="input.education.place"
+                :readonly="!educationEditState"
                 placeholder="Nama institusi"
                 required
               />
@@ -133,11 +204,10 @@
               <v-menu
                 v-model="resource.educationDateMenu"
                 :close-on-content-click="false"
+                :disabled="!educationEditState"
                 :nudge-right="40"
-                lazy
                 transition="scale-transition"
                 offset-y
-                full-width
                 min-width="290px"
               >
                 <template v-slot:activator="{ on }">
@@ -152,20 +222,66 @@
                 </template>
                 <v-date-picker
                   v-model="input.education.graduationDate"
-                  type="month"
                   @input="resource.educationDateMenu = false"
                 >
                 </v-date-picker>
               </v-menu>
             </v-flex>
           </div>
-          <v-flex xs12 pt-3 pb-5 />
-          <h2 class="info-tag">Career</h2>
+          <v-flex v-if="educationEditState" xs12 pt-3 pb-5>
+            <v-layout align-center justify-space-around row wrap>
+              <v-flex xs4>
+                <v-btn
+                  small
+                  block
+                  color="primary"
+                  :disabled="loading.education"
+                  :loading="loading.education"
+                  @click="saveEditEducation()"
+                >
+                  Save
+                </v-btn>
+              </v-flex>
+              <v-flex xs4>
+                <v-btn
+                  small
+                  block
+                  color="error"
+                  :disabled="loading.education"
+                  @click="cancelEditEducation()"
+                >
+                  Cancel
+                </v-btn>
+              </v-flex>
+            </v-layout>
+          </v-flex>
+          <v-layout row class="ma-0 pa-0 info-tag">
+            <v-flex grow>
+              <h2>Career</h2>
+            </v-flex>
+            <v-flex shrink>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    icon
+                    :color="careerEditState ? 'blue' : 'grey'"
+                    v-bind="attrs"
+                    @click="toggleEditCareer()"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                </template>
+                <span>Edit Pekerjaan Terakhir</span>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
           <div class="input-grid career">
             <label class="label-grid">Nama Tempat</label>
             <v-flex class="line-input">
               <v-text-field
                 v-model="input.career.place"
+                :readonly="!careerEditState"
                 placeholder="Nama Tempat"
                 required
               />
@@ -174,6 +290,7 @@
             <v-flex class="line-input">
               <v-text-field
                 v-model="input.career.position"
+                :readonly="!careerEditState"
                 placeholder="Nama Tempat"
                 required
               />
@@ -182,12 +299,11 @@
             <v-flex class="line-input">
               <v-menu
                 v-model="resource.startDateMenuCareer"
+                :disabled="!careerEditState"
                 :close-on-content-click="false"
                 :nudge-right="40"
-                lazy
                 transition="scale-transition"
                 offset-y
-                full-width
                 min-width="290px"
               >
                 <template v-slot:activator="{ on }">
@@ -212,16 +328,16 @@
               <v-menu
                 v-model="resource.endDateMenuCareer"
                 :close-on-content-click="false"
+                :disabled="!careerEditState || input.career.startDate === null"
                 :nudge-right="40"
-                lazy
                 transition="scale-transition"
                 offset-y
-                full-width
                 min-width="290px"
               >
                 <template v-slot:activator="{ on }">
                   <v-text-field
                     v-model="input.career.endDate"
+                    :disabled="input.career.startDate === null"
                     placeholder="Tahun-Bulan-Tanggal"
                     prepend-icon="mdi-calendar"
                     readonly
@@ -231,12 +347,40 @@
                 </template>
                 <v-date-picker
                   v-model="input.career.endDate"
+                  :min="input.career.startDate"
                   @input="resource.endDateMenuCareer = false"
                 >
                 </v-date-picker>
               </v-menu>
             </v-flex>
           </div>
+          <v-flex v-if="careerEditState" xs12 pt-3 pb-5>
+            <v-layout align-center justify-space-around row wrap>
+              <v-flex xs4>
+                <v-btn
+                  small
+                  block
+                  color="primary"
+                  :disabled="loading.career"
+                  :loading="loading.career"
+                  @click="saveEditCareer()"
+                >
+                  Save
+                </v-btn>
+              </v-flex>
+              <v-flex xs4>
+                <v-btn
+                  small
+                  block
+                  color="error"
+                  :disabled="loading.career"
+                  @click="cancelEditCareer()"
+                >
+                  Cancel
+                </v-btn>
+              </v-flex>
+            </v-layout>
+          </v-flex>
         </v-flex>
       </v-layout>
     </v-flex>
@@ -244,7 +388,10 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2'
 import SharedFunctionMixin from '@/mixin/sharedFunctionMixin'
+
+const axios = require('axios')
 
 export default {
   middleware: 'verifyUser',
@@ -263,7 +410,22 @@ export default {
         startDateMenuCareer: false,
         endDateMenuCareer: false,
       },
+      loading: {
+        profile: false,
+        education: false,
+        career: false,
+      },
+      profileEditState: false,
+      educationEditState: false,
+      careerEditState: false,
+      tempData: null,
       input: {
+        id: null,
+        pictures: {
+          profile: null,
+          cover: null,
+          collections: [],
+        },
         profile: {
           name: '',
           gender: 0,
@@ -283,6 +445,196 @@ export default {
         },
       },
     }
+  },
+  created() {
+    axios.defaults.headers.common.Authorization = `Bearer ${this.$store.state.authToken}`
+    this.getData()
+  },
+  methods: {
+    toggleEditCareer() {
+      this.careerEditState = !this.careerEditState
+      if (this.careerEditState) {
+        this.tempData = JSON.parse(JSON.stringify(this.input.career))
+      }
+    },
+    toggleEditEducation() {
+      this.educationEditState = !this.educationEditState
+      if (this.educationEditState) {
+        this.tempData = JSON.parse(JSON.stringify(this.input.education))
+      }
+    },
+    toggleEditProfile() {
+      this.profileEditState = !this.profileEditState
+      if (this.profileEditState) {
+        this.tempData = JSON.parse(JSON.stringify(this.input.profile))
+      }
+    },
+    cancelEditCareer() {
+      this.careerEditState = false
+      this.input.career = this.tempData
+    },
+    cancelEditEducation() {
+      this.educationEditState = false
+      this.input.education = this.tempData
+    },
+    cancelEditProfile() {
+      this.profileEditState = false
+      this.input.profile = this.tempData
+    },
+    saveEditCareer() {
+      this.loading.career = true
+      axios
+        .post('/api/v1/profile/career', {
+          position: this.input.career.position,
+          company_name: this.input.career.place,
+          starting_from: this.input.career.startDate,
+          ending_in: this.input.career.endDate,
+        })
+        .then((response) => {
+          console.log(response)
+          if (response.status === 201) {
+            Swal.fire({
+              title: 'Sukses!!',
+              text: 'Pekerjaan Terakhir sudah dirubah',
+              icon: 'success',
+              timer: 2000,
+              confirmButtonText: 'Ok',
+            })
+            this.careerEditState = false
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+          Swal.fire({
+            title: 'Terjadi Kesalahan',
+            text: 'Cek isian jangan ada yang kosong',
+            icon: 'error',
+            timer: 2000,
+            confirmButtonText: 'Tutup',
+          })
+        })
+        .finally(() => {
+          this.loading.career = false
+        })
+    },
+    saveEditEducation() {
+      this.loading.education = true
+      axios
+        .post('/api/v1/profile/education', {
+          school_name: this.input.education.place,
+          graduation_time: this.input.education.graduationDate,
+        })
+        .then((response) => {
+          console.log(response)
+          if (response.status === 201) {
+            Swal.fire({
+              title: 'Sukses!!',
+              text: 'Jenjang pendidikan sudah dirubah',
+              icon: 'success',
+              timer: 2000,
+              confirmButtonText: 'Ok',
+            })
+            this.educationEditState = false
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+          Swal.fire({
+            title: 'Terjadi Kesalahan',
+            text: 'Cek isian jangan ada yang kosong',
+            icon: 'error',
+            timer: 2000,
+            confirmButtonText: 'Tutup',
+          })
+        })
+        .finally(() => {
+          this.loading.education = false
+        })
+    },
+    saveEditProfile() {
+      this.loading.profile = true
+      axios
+        .post('/api/v1/profile', {
+          name: this.input.profile.name,
+          gender: this.input.profile.gender,
+          birthday: this.input.profile.birth,
+          hometown: this.input.profile.address,
+          bio: this.input.profile.bio,
+        })
+        .then((response) => {
+          console.log(response)
+          if (response.status === 201) {
+            Swal.fire({
+              title: 'Sukses!!',
+              text: 'profile sudah dirubah',
+              icon: 'success',
+              timer: 2000,
+              confirmButtonText: 'Ok',
+            })
+            this.profileEditState = false
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+          Swal.fire({
+            title: 'Terjadi Kesalahan',
+            text: 'Cek isian jangan ada yang kosong',
+            icon: 'error',
+            timer: 2000,
+            confirmButtonText: 'Tutup',
+          })
+        })
+        .finally(() => {
+          this.loading.profile = false
+        })
+    },
+    convertGender(value) {
+      return value === 'male' ? 0 : 1
+    },
+    getData() {
+      axios
+        .get('/api/v1/profile/me')
+        .then((response) => {
+          if (response.status === 200) {
+            const { user } = response.data.data
+            this.input.id = user.id
+            this.input.profile = {
+              name: user.name,
+              gender: user.gender ? this.convertGender(user.gender) : null,
+              birth: user.birthday,
+              address: user.hometown,
+              bio: user.bio,
+            }
+            this.input.education = {
+              place: user.education.school_name,
+              graduationDate: user.education.graduation_time,
+            }
+            this.input.career = {
+              place: user.career.company_name,
+              position: '',
+              startDate: user.career.starting_from,
+              endDate: user.career.ending_in,
+            }
+            this.input.pictures = {
+              profile: user.user_picture,
+              cover: user.cover_picture.url,
+              collections: [],
+            }
+          }
+        })
+        .catch((error, code) => {
+          console.log(error)
+          Swal.fire({
+            title: 'Session tidak valid',
+            text: 'Silahkan login ulang',
+            icon: 'error',
+            timer: 2000,
+            confirmButtonText: 'Tutup',
+          }).finally(() => {
+            this.$router.push(`/`)
+          })
+        })
+    },
   },
 }
 </script>
