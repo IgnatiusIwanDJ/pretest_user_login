@@ -8,8 +8,30 @@
             <v-icon>mdi-close-circle-outline</v-icon>
           </v-btn>
         </v-flex>
+        <v-flex xs12 class="keeper-hint">
+          <label>Last message at {{ lastTime }}</label>
+        </v-flex>
         <v-flex xs12 ml-3 mr-3 class="dialog-box">
-          <v-layout row wrap></v-layout>
+          <v-layout row wrap>
+            <template v-for="(chat, index) in resource.chatHistory">
+              <v-flex
+                :key="'chat-' + chat.time + '-' + chat.user + '-' + index"
+                xs12
+              >
+                <p
+                  :class="[
+                    { 'message-incoming': chat.role === 'receiver' },
+                    { 'message-outgoing': chat.role === 'sender' },
+                    'message',
+                  ]"
+                >
+                  {{ chat.message }}
+                  <br />
+                  {{ chat.user }} - {{ chat.time }}
+                </p>
+              </v-flex>
+            </template>
+          </v-layout>
         </v-flex>
         <v-flex xs12 class="user-type-layout">
           <v-layout row>
@@ -19,7 +41,7 @@
                 :disabled="loading"
                 class="user-textarea"
                 placeholder="Type here..."
-                row-height="10"
+                row-height="7"
                 auto-grow
                 outlined
                 hide-details
@@ -43,8 +65,8 @@
           </v-layout>
         </v-flex>
       </v-layout>
-      <v-snackbar v-model="popHint" :timeout="2000">
-        {{ text }}
+      <v-snackbar v-model="popHint" top :timeout="2000">
+        {{ hintText }}
         <template v-slot:action="{ attrs }">
           <v-btn color="blue" v-bind="attrs" @click="popHint = false">
             Close
@@ -65,23 +87,69 @@ export default {
       default: null,
       type: String,
     },
+    sugarId: {
+      default: null,
+      type: String,
+    },
   },
   data() {
     return {
       hintText: '',
       popHint: false,
       loading: false,
+      time: null,
+      resource: {
+        chatHistory: [],
+      },
       input: {
         typedChat: '',
       },
     }
   },
+  computed: {
+    lastTime() {
+      if (this.resource.chatHistory.length === 0) {
+        return ''
+      }
+      return this.resource.chatHistory[this.resource.chatHistory.length - 1]
+        .time
+    },
+  },
+  created() {
+    this.time = setInterval(this.getMessage, 4000)
+  },
+  beforeDestroy() {
+    clearInterval(this.time)
+  },
   methods: {
+    getMessage() {
+      axios
+        .get('/api/v1/message/'.concat(this.userId))
+        .then((response) => {
+          if (response.status === 200) {
+            console.log(response)
+            this.resource.chatHistory = response.data.data.chat.map((item) => {
+              return {
+                role: item.type,
+                message: item.message,
+                user:
+                  item.type === 'sender'
+                    ? item.user_sender.name
+                    : item.user_receiver.name,
+                time: new Date(item.created_at).toLocaleTimeString(),
+              }
+            })
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     sendMessage() {
       this.loading = true
       axios
         .post('/api/v1/message/send', {
-          user_id: this.$store.state.authToken,
+          user_id: this.userId,
           message: this.input.typedChat,
         })
         .then(() => {
@@ -116,11 +184,36 @@ export default {
   border-radius: 5px;
   background-clip: content-box;
 }
+.keeper-hint {
+  text-align: center;
+  font-size: 0.8em;
+  color: darkgrey;
+}
 .user-textarea {
   margin: 0;
   padding: 0;
 }
 .send-icon {
   background-color: #a0d6c2;
+}
+.message {
+  font-family: sans-serif;
+  font-weight: 100;
+  width: 45%;
+  border-radius: 10px;
+  padding: 0.5em;
+  font-size: 0.8em;
+  margin-top: 12px;
+}
+.message-incoming {
+  margin-left: 15px;
+  background: #f1f0f0;
+  color: black;
+}
+.message-outgoing {
+  background: #407fff;
+  color: white;
+  margin-left: 52%;
+  margin-right: 15px;
 }
 </style>

@@ -26,6 +26,7 @@
                 <v-text-field
                   v-model="register.password"
                   :rules="rules.password"
+                  :type="'password'"
                   label="password"
                   outlined
                   prepend-inner-icon="mdi-lock"
@@ -81,6 +82,7 @@
                 <v-text-field
                   v-model="signIn.password"
                   :rules="rules.password"
+                  :type="'password'"
                   label="password"
                   outlined
                   prepend-inner-icon="mdi-lock"

@@ -80,6 +80,7 @@ export default {
     'http://pretest-qa.dcidev.id/api/v1/uploads/cover',
     'http://pretest-qa.dcidev.id/api/v1/uploads/profile',
     'http://pretest-qa.dcidev.id/api/v1/message/send',
+    'http://pretest-qa.dcidev.id/api/v1/message/*',
   ],
   /*
    ** vuetify module configuration
