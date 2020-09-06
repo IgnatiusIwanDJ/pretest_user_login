@@ -19,6 +19,12 @@ export const mutations = {
   saveCurrentLocation(state, payload) {
     state.currentLocation = payload
   },
+  setLoggedIn(state, payload) {
+    state.userLoggedIn = payload
+  },
+  removeLoggedIn(state) {
+    state.userLoggedIn = null
+  },
   saveDeviceToken(state, payload) {
     localStorage.setItem('device_token', payload)
     state.deviceToken = payload
@@ -26,5 +32,9 @@ export const mutations = {
   saveToken(state, payload) {
     localStorage.setItem('token', payload)
     state.authToken = payload
+  },
+  removeToken(state, payload) {
+    localStorage.removeItem('token')
+    state.authToken = null
   },
 }

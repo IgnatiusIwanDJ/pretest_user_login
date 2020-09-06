@@ -162,6 +162,14 @@ export default {
                 response.data.data.user.access_token,
               )
               axios.defaults.headers.common.Authorization = `Bearer ${response.data.data.user.access_token}`
+              this.$store.commit(
+                'setLoggedIn',
+                this.$store.state.toVerify.userId,
+              )
+              const telephoneNum = this.$store.state.toVerify.telephone
+              this.$store.commit('removeTempData')
+              // redirect to user page
+              this.$router.push(`/user/${telephoneNum}`)
             }
           })
           .catch((error) => {

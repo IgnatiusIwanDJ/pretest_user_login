@@ -49,9 +49,10 @@
           <v-layout align-start justify-center column>
             <v-flex xs12 pb-2 align-self-center>
               <v-btn
-                :disabled="!registerValid"
+                :disabled="!registerValid || loading.register"
                 class="login-button"
                 color="orange"
+                :loading="loading.register"
                 @click="postRegister()"
               >
                 Register
@@ -102,7 +103,8 @@
           <v-layout align-start justify-center column>
             <v-flex xs12 pb-2 align-self-center>
               <v-btn
-                :disabled="!loginValid"
+                :disabled="!loginValid || loading.login"
+                :loading="loading.login"
                 class="login-button"
                 color="orange"
                 @click="
@@ -137,6 +139,10 @@ export default {
     return {
       registerValid: true,
       loginValid: true,
+      loading: {
+        login: false,
+        register: false,
+      },
       rules: {
         telephone: [
           (v) => !!v || 'isi nomor telephone',
@@ -191,6 +197,7 @@ export default {
     },
     postLogin(userData) {
       if (this.$refs.loginForm.validate()) {
+        this.loading.login = true
         axios
           .post(
             '/api/v1/oauth/sign_in',
@@ -203,7 +210,28 @@ export default {
               response.data.data.user.access_token,
             )
             axios.defaults.headers.common.Authorization = `Bearer ${response.data.data.user.access_token}`
-            this.$router.push(`/user/${userData.telephone}`)
+            // I don't know if this right , but right now the only way to get user id
+            // is through /otp/request
+            axios
+              .post(
+                '/api/v1/register/otp/request',
+                `phone=${userData.telephone}`,
+              )
+              .then((response) => {
+                console.log(response)
+                this.$store.commit('setLoggedIn', response.data.data.user.id)
+                this.$router.push(`/user/${userData.telephone}`)
+              })
+              .catch((error) => {
+                console.log(error)
+                Swal.fire({
+                  title: 'Terjadi Kesalahan tidak bisa mengirimkan OTP',
+                  text: error,
+                  icon: 'error',
+                  timer: 2000,
+                  confirmButtonText: 'Tutup',
+                })
+              })
           })
           .catch((error) => {
             console.log(error)
@@ -215,11 +243,15 @@ export default {
               confirmButtonText: 'Tutup',
             })
           })
+          .finally(() => {
+            this.loading.login = false
+          })
       }
     },
     postRegister() {
       if (this.$refs.registerForm.validate()) {
         this.getLocation()
+        this.loading.register = true
         axios
           .post(
             '/api/v1/register',
@@ -247,6 +279,9 @@ export default {
               timer: 2000,
               confirmButtonText: 'Tutup',
             })
+          })
+          .finally(() => {
+            this.loading.register = false
           })
       }
     },
